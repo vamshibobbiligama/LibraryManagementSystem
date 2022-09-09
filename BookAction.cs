@@ -2,7 +2,7 @@ using System.Data.SqlClient;
 class BookAction
 {
     
-    public void LendingBook(SqlCommand cmd,string username)
+    public void LendingBook(SqlCommand cmd, string username, User user)
     {
         again:
         cmd.CommandText="select bid,bookName from books where BooksCount>0";
@@ -23,37 +23,49 @@ class BookAction
             SQLConnection.sql.Close();
             Environment.Exit(0);
         }
-       reader.Close();
+        reader.Close();
         System.Console.WriteLine();
         System.Console.Write("Enter BookId : ");
         int choice=0;
-            try{
-                choice = Convert.ToInt32(Console.ReadLine());
-            }
-            catch(Exception e)
+        try{
+            choice = Convert.ToInt32(Console.ReadLine());
+        }
+        catch(Exception e)
+        {
+            System.Console.WriteLine("Enter valid input !");
+            goto again;
+        }
+        /*
+        if user enter book id whose quantity is = 0
+        */
+        
+        try
+        {   
+            cmd.CommandText="select * from orders where bid="+choice+" and uid=(select uid from users where username = '"+username+"')"; 
+            reader=cmd.ExecuteReader();
+            if(reader.HasRows)
             {
-                System.Console.WriteLine("Enter valid input !");
-                goto again;
-            }
-            cmd.CommandText="select * from books where bid="+choice+" and BooksCount>0;";
-            
-            try
-            {   
-                reader=cmd.ExecuteReader();
-                if(!reader.HasRows)
-                {
-                    reader.Close();
-                    throw new Exception();
-                }
                 reader.Close();
-                OrderConfirmed(choice, cmd, username);
-            }
-            catch (System.Exception e)
-            {
-                System.Console.WriteLine("\nEnter Valid Book Id !");
+                System.Console.WriteLine("\nYou already have one");
                 goto again;
             }
-           
+            reader.Close();
+            cmd.CommandText="select * from books where bid="+choice+" and BooksCount>0;";
+            reader=cmd.ExecuteReader();
+            if(!reader.HasRows)
+            {
+                reader.Close();
+                throw new Exception();
+            }
+            reader.Close();
+            OrderConfirmed(choice, cmd, username);
+            user.ChooseAction(cmd);
+        }
+        catch (System.Exception e)
+        {
+            System.Console.WriteLine("\nEnter Valid Book Id !");
+            goto again;
+        }
     }
 
     public void ReturnBook(SqlCommand cmd, string username, User user)
@@ -73,6 +85,7 @@ class BookAction
             return;
         }
         reader.Close();
+        BooksWithMe(cmd,username,user,false);
         System.Console.WriteLine();
         System.Console.Write("Enter BookId : ");
         int bid=0;
@@ -94,6 +107,7 @@ class BookAction
             cmd.CommandText="delete from orders where bid="+bid+"and uid=(select uid from users where username='"+username+"');";
             cmd.ExecuteNonQuery();
             System.Console.WriteLine("Book returned successfully !");
+            user.ChooseAction(cmd);
         }
         else 
         {
@@ -110,11 +124,26 @@ class BookAction
         cmd.ExecuteNonQuery();
         cmd.CommandText="insert into Orders values("+bookid+",(select uid from users where username='"+username+"'))";
         cmd.ExecuteNonQuery();
-        System.Console.Write("Book issued successfully, Enjoy !!");
+        System.Console.Write("\nBook issued successfully, Enjoy !!\n");
     }
 
-    public void BooksWithMe(SqlCommand cmd,string username)
+    public void BooksWithMe(SqlCommand cmd, string username, User user, bool chk)
     {
-        
+        cmd.CommandText="select bid, bookName from books where bid in (select bid from orders where uid=(select uid from users where username='"+username+"'))";
+        SqlDataReader reader=cmd.ExecuteReader();
+        if(!reader.HasRows)
+            Console.WriteLine("\nYou don't have any books to return !");
+        else
+        {
+            System.Console.WriteLine("\nBookId    |    Book Name");
+            System.Console.WriteLine("----------------------------");
+            while (reader.Read())
+            {
+                System.Console.WriteLine("  "+reader.GetInt32(0)+"     |    "+reader.GetString(1));
+            }
+        }
+        reader.Close();
+        if(chk)
+        user.ChooseAction(cmd);
     }
 }

@@ -62,13 +62,13 @@ class User
             }
             switch (choice)
             {
-                case 1 : Act.LendingBook(cmd, username);
+                case 1 : Act.LendingBook(cmd, username, this);
                          break;   
 
                 case 2 : Act.ReturnBook(cmd, username, this);
                          break;
 
-                case 3 : Act.BooksWithMe(cmd,username);
+                case 3 : Act.BooksWithMe(cmd,username, this, true);
                          break;
 
                 case 4 : SQLConnection.sql.Close();
