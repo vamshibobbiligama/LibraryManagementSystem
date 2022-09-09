@@ -1,7 +1,7 @@
 using System.Data.SqlClient;
 class BookAction
 {
-    
+    //User 
     public void LendingBook(SqlCommand cmd, string username, User user)
     {
         again:
@@ -146,4 +146,21 @@ class BookAction
         if(chk)
         user.ChooseAction(cmd);
     }
+
+
+    public void AddNewBook(SqlCommand cmd, Admin admin)
+    {
+        string BookName = Console.ReadLine().Trim();
+        int BookCount=0;
+        try
+        {
+            BookCount = Convert.ToInt32(Console.ReadLine());
+        }
+        catch (System.Exception)
+        {
+            System.Console.WriteLine();
+        }
+        cmd.CommandText
+    }
+
 }
