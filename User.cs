@@ -6,6 +6,70 @@ class User
     private string password;
     public User()
     {
+        ChooseLoginType();
+    }
+
+    private void ChooseLoginType()
+    {
+        again:
+            System.Console.WriteLine();
+            Console.WriteLine("1.Login");
+            Console.WriteLine("2.Register");
+            Console.WriteLine("3.Exit");
+            Console.Write("\nEnter your Choice : ");
+            int choice=0;
+            try{
+                choice = Convert.ToInt32(Console.ReadLine());
+            }
+            catch(Exception)
+            {
+                System.Console.WriteLine("\n\t\t\t!!! Enter valid input !!!");
+                goto again;
+            }
+            switch (choice)
+            {
+                case 1 : Login();
+                         break;   
+                case 2 : Register();
+                         break;
+                case 3 : Console.WriteLine("\n\t\t\t-----!!! Thank You !!!-----");
+                         SQLConnection.sql.Close();
+                         Environment.Exit(0);
+                         break;
+                default: Console.WriteLine("Please enter valid choice !");
+                         goto again;
+            }
+    }
+
+
+    private void Register()
+    {
+        SqlCommand cmd=SQLConnection.GetSQLCommand();
+        again:
+            System.Console.Write("Enter the Username : ");
+            string uname=Console.ReadLine();
+            cmd.CommandText="select * from users where username='"+uname+"';";
+            SqlDataReader reader=cmd.ExecuteReader();
+            if(reader.HasRows)
+            {
+                reader.Close();
+                System.Console.WriteLine("\n\t\t\t!!! Username already exits, Choose another username !!!");
+                goto again;
+            }
+            reader.Close();
+            System.Console.Write("Enter password : ");
+            string pass=Console.ReadLine();
+            cmd.CommandText="insert into users values('"+uname+"','"+pass+"');";
+            cmd.ExecuteNonQuery();
+            System.Console.WriteLine("\n\t\t\t!!! Registered Successfully :) !!!\n");
+            SQLConnection.sql.Close();
+            ChooseLoginType();
+    }
+
+
+
+    private void Login()
+    {
         System.Console.WriteLine();
         System.Console.Write("Enter Username : ");
         username = Console.ReadLine().Trim();
@@ -13,6 +77,9 @@ class User
         password = Console.ReadLine();
         Validate();
     }
+
+
+
     private void Validate()
     {
         SqlCommand cmd=SQLConnection.GetSQLCommand();
@@ -25,7 +92,7 @@ class User
             if(!password.Equals(reader.GetString(0)))
             {
                 System.Console.WriteLine("Invalid username/password");
-                Environment.Exit(0);
+                Login();
             }
             reader.Close();
             ChooseAction(cmd);
@@ -33,7 +100,7 @@ class User
         else 
         {
             System.Console.WriteLine("Invalid username/password");
-            Environment.Exit(0);
+            Login();
         }
         
     }
@@ -41,7 +108,7 @@ class User
     public void ChooseAction(SqlCommand cmd)
     {  
        again:
-        System.Console.WriteLine();
+        System.Console.WriteLine("\n--------Menu-------\n");
         System.Console.WriteLine("1. Lend a Book");
         System.Console.WriteLine("2. Return a Book");
         System.Console.WriteLine("3. Books With Me");
@@ -55,7 +122,7 @@ class User
                 choice = Convert.ToInt32(Console.ReadLine());
                 Act=new BookAction();
             }
-            catch(Exception e)
+            catch(Exception)
             {
                 System.Console.WriteLine("Enter valid input !");
                 goto again;
@@ -77,7 +144,7 @@ class User
                          break;
 
                 case 5 : SQLConnection.sql.Close();
-                         System.Console.WriteLine("\nThank You !!\n");
+                         System.Console.WriteLine("\n\t\t\t!!! Thank You !!!\n");
                          Environment.Exit(0);
                          break;
 
